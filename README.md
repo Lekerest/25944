@@ -1,5 +1,3 @@
-# 24940
-
 Подключение к Solaris
 
 https://github.com/vkinsu/
@@ -74,7 +72,6 @@ cat .ssh/id_rsa.pub
 2. git add <Путь к вашей папке> добавление в репозиторий
 3. git commit -m "<Что-то написать>" сделать коммит
 4. git push для загрузки на github
-# 24940
 
 
 #…or create a new repository on the command line
