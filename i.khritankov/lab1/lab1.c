@@ -1,3 +1,5 @@
+#define _XOPEN_SOURCE 500
+
 #include <stdio.h> // стандарт ввод/вывод принтф перрор
 #include <stdlib.h> // стандартная библиотека для strtol
 #include <unistd.h> // всякая всячина из юникса, в том числе getopt
