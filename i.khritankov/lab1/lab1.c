@@ -1,14 +1,13 @@
 #define _XOPEN_SOURCE 500
 
-#include <stdio.h> // стандарт ввод/вывод принтф перрор
+#include <stdio.h> // стандарт ввод/вывод printf perror
 #include <stdlib.h> // стандартная библиотека для strtol
-#include <unistd.h> // всякая всячина из юникса, в том числе getopt
-#include <sys/resource.h> // getrlimit и setrlimit ограничение ресурсов процессора
-#include <ulimit.h> // функции ulimit
+#include <unistd.h> // всякая всячина из Unix, в том числе getopt
+#include <sys/resource.h> // getrlimit и setrlimit, ограничения ресурсов процесса
 #include <errno.h> // глобальная переменная errno для обработки ошибок
 #include <limits.h> // PATH_MAX
 
-extern char **environ; // массив строк окружения path home user etc
+extern char **environ; // массив строк окружения PATH HOME USER etc
 
 
 /*
@@ -94,17 +93,19 @@ static int process_options(int argc, char *argv[])
             break;
 
         case 'u':
-            errno = 0; // сбрасываем errno
-            value = ulimit(UL_GETFSIZE); // получаем текущий ulimit размера файла
-
-            if (value == -1 && errno != 0) // проверяем ошибку
+            if (getrlimit(RLIMIT_NPROC, &limit) == -1) // получаем лимит количества процессов пользователя
             {
-                perror("ulimit");
+                perror("getrlimit");
                 status = 1;
+            }
+            else if (limit.rlim_cur == RLIM_INFINITY) // если лимита нет
+            {
+                printf("unlimited\n");
             }
             else
             {
-                printf("%ld\n", value); // печатаем ulimit
+                printf("%llu\n",
+                       (unsigned long long)limit.rlim_cur); // печатаем текущий soft limit
             }
             break;
 
@@ -114,13 +115,18 @@ static int process_options(int argc, char *argv[])
                 fprintf(stderr, "Invalid ulimit value: %s\n", argument);
                 status = 1;
             }
+            else if (getrlimit(RLIMIT_NPROC, &limit) == -1) // получаем текущие лимиты процессов
+            {
+                perror("getrlimit");
+                status = 1;
+            }
             else
             {
-                errno = 0;
+                limit.rlim_cur = (rlim_t)value; // устанавливаем новый soft limit процессов
 
-                if (ulimit(UL_SETFSIZE, value) == -1 && errno != 0) // устанавливаем новый ulimit
+                if (setrlimit(RLIMIT_NPROC, &limit) == -1) // применяем новый лимит
                 {
-                    perror("ulimit");
+                    perror("setrlimit");
                     status = 1;
                 }
             }
